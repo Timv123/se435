@@ -2,7 +2,9 @@
 import java.io.*; // Get the
 import java.net.*; // Get the
 import java.util.HashMap;
+import java.util.Random;
 import java.util.UUID;
+
 
 // Class definition
 // Class member, socket, local to Worker.
@@ -17,7 +19,7 @@ class Worker extends Thread {
 		// Get I/O streams in/out from the socket:
 		PrintStream out = null; //stream to sock
 		BufferedReader in = null;//read from sock
-		String uuid = null;
+		
 		try {
 			in = new BufferedReader(new InputStreamReader(sock.getInputStream())); //Taking input from socket
 			out = new PrintStream(sock.getOutputStream()); 
@@ -29,11 +31,9 @@ class Worker extends Thread {
 			}
 			
 			else try {
-			String name;
-			name = in.readLine ();
-			if(validateUUID(name)!=true){	
-				uuid = in.readLine();
-			}
+			String uuid= in.readLine();
+			String name = in.readLine ();
+				
 			//listening to socket for "shutdown" if greater than -1, otherwise call printRemoteAd..() to print InetAddress address.
 			if (name.indexOf("shutdown") > -1){
 				JokerServer.controlSwitch = false;
@@ -42,8 +42,14 @@ class Worker extends Thread {
 				out.println("Please send final shutdown request to listener.");
 				sock.close(); 
 			} else{
+				
+				if(validateUUID(uuid)==true){	
+					System.out.println("Name of UUID: " + uuid );
+							
+				}
 				System.out.println("Name for jokes is: " + name );
-				printJokesOrProverbs(name, out, uuid);
+				
+				printJokesOrProverbs(name, out , uuid);
 			}
 		} catch (IOException x) { System.out.println("Server read error"); x.printStackTrace ();}
 		 sock.close();
@@ -52,16 +58,12 @@ class Worker extends Thread {
 	}
 
 	// Print the jokes or proverbs
-	static void printJokesOrProverbs (String name, PrintStream out, String uuid) { 
-		try {	
-		out.println("Looking up " + uuid);
-		//Get the i.p address of the name parameter
-		InetAddress machine = InetAddress.getByName (name); 
-		out.println("Host name : " + machine.getHostName ()); 
-		out.println("Host IP : " + toText (machine.getAddress ()));
-	} catch(UnknownHostException ex) {
-		out.println ("Failed in atempt to look up " + name);}
+	static void printJokesOrProverbs (String name, PrintStream out ,String uuid) { 
 		
+		out.println("Looking up ");
+		//Get jokes	
+		String joke = getJokes(name, uuid);
+		out.println("Joke: " + joke); 	
 	}
 	static boolean validateUUID (String uuid){
 		
@@ -76,30 +78,28 @@ class Worker extends Thread {
 		
 	}
 	
-//	static String getJokes(String name, String uuid){
-//		
+	static String getJokes(String name, String uuid){		
 //		HashMap<String,Integer> jokes = new HashMap <String,Integer>();
-//		
-//		
 //		jokes.put("A", 1);  
 //		jokes.put("B", 2);
 //		jokes.put("C", 3);
 //		jokes.put("D", 4);
-//		jokes.put("E", 5);
-//		
-//		return jokes;
-//		
-//	}
+//		jokes.put("E", 5);	
+		
+		return name;	
+	}
+	static boolean validateJoke(String joke, String uuid){	
+	
+		return true;
+	}
 //	static String getProverb(String name){
 //		HashMap<String,Integer> proverbs = new HashMap <String,Integer>();
-//
 //		proverbs.put("A", 1);
 //		proverbs.put("B", 2);
 //		proverbs.put("C", 3);
 //		proverbs.put("D", 4);
 //		proverbs.put("E", 5);
-//	}
-
+//	
 	// Not interesting to us:
 	static String toText(byte ip[]) { /* Make portable for 128 bit format */
 		StringBuffer result = new StringBuffer();
@@ -112,22 +112,48 @@ class Worker extends Thread {
 	}
 	}
 
+	class AdminLooper implements Runnable {
+		  public static boolean adminControlSwitch = true;
+		  public void run(){ // RUNning the Admin listen loop
+		    System.out.println("In the admin looper thread");
+		    
+		    int q_len = 6; /* Number of requests for OpSys to queue */
+		    int port = 2565;  // We are listening at a different port for Admin clients
+		    Socket sock;
+	
+		    try{
+		      ServerSocket servsock = new ServerSocket(port, q_len);
+		      while (adminControlSwitch) {
+			// wait for the next ADMIN client connection:
+			sock = servsock.accept();
+			new AdminWorker (sock).start(); 
+		      }
+		    }catch (IOException ioe) {System.out.println(ioe);}
+
+		  }
+	}
+
 	public class JokerServer {
 		public static boolean controlSwitch = true;
-
 		public static void main(String a[]) throws IOException {
-			int q_len = 6; /* Number of requests for OpSys to queue */
-			int port = 1800; // static port
-			Socket sock;
-			ServerSocket servsock = new ServerSocket(port, q_len); //create serverSocket 
-			System.out.println(" Listening to serve jokes or proverb at port .\n" + port);
-			
-			//Continue to listen to server socket and accept it
-			while (controlSwitch) {
-				sock = servsock.accept(); // wait for the next client connection
-				if (controlSwitch)
-					new Worker(sock).start(); // Spawn worker to handle it //
-				
-			}
-		}
+		    int q_len = 6; /* Number of requests for OpSys to queue */
+		    int port = 1565;
+		    Socket sock;
+
+		    AdminLooper AL = new AdminLooper(); // create a DIFFERENT thread
+		    Thread t = new Thread(AL);
+		    t.start();  // ...and start it, waiting for administration input
+		    
+		    ServerSocket servsock = new ServerSocket(port, q_len);
+		        
+		    System.out.println("Joke server starting up.\n");
+		    while (controlSwitch) {
+		      // wait for the next client connection:
+		      sock = servsock.accept();
+		      new Worker (sock).start();
+		    }
+		  }
+	
 	}
+	
+	

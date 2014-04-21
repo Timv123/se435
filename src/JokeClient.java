@@ -61,6 +61,8 @@ public class JokeClient {
 			
 			// Send machine name or IP address to server:
 			toServer.println(uuid); 
+			toServer.flush();
+			toServer.println(name); 
 
 			// Execute the stream
 			toServer.flush();
