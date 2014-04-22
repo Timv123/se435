@@ -4,8 +4,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 
-
-
 public class JokerAdminClient {
 	public static void main(String args[]) {
 		String serverName;      

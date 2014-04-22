@@ -1,5 +1,6 @@
 import java.io.*; 
 import java.net.Socket;
+import java.util.Scanner;
 import java.util.UUID;
 
 public class JokeClient {
@@ -16,19 +17,22 @@ public class JokeClient {
 		System.out.println("JokeServer version 0.0.1");
 		System.out.println("Using server: " + serverName + ", Port: 1800");
 		
-		//While user's input is NOT "quit" send off to get a remoteAddress
+		//While user's input is NOT "quit" send off to get a jokes
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		try {
 			String name;
-			do {
-				System.out.print("Enter a name to get jokes or proverb, (quit) to end: ");
-				System.out.flush();
-				name = in.readLine();
-				if (name.indexOf("quit") < 0)
-					getJokesFromJserver(name, serverName, uuid);
-			} while (name.indexOf("quit") < 0); // quitSmoking.com?
-												// System.out.println
-												// ("Cancelled by user request.");
+
+			System.out.print("Enter a name to get jokes or proverb, (quit) to end: ");
+			name = in.readLine();
+			getJokesFromJserver(name, serverName, uuid);
+				
+			while (name.indexOf("quit") < 0) {
+
+				Scanner scanner = new Scanner(System.in);
+		        System.out.print("Press ENTER for next joke/proverb:\t");
+		        String sentence = scanner.nextLine();
+		        getJokesFromJserver(name, serverName, uuid);
+			}
 		} catch (IOException x) {
 			x.printStackTrace();
 		}
