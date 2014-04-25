@@ -7,8 +7,7 @@ public class JokeClient {
 	public static void main(String args[]) {
 		String serverName;
 		UUID uuid = UUID.randomUUID();
-        String uid = uuid.toString();
-        
+       
 		System.out.println(args.length);
 		if (args.length < 1)
 			serverName = "localhost";
@@ -30,22 +29,12 @@ public class JokeClient {
 
 				Scanner scanner = new Scanner(System.in);
 		        System.out.print("Press ENTER for next joke/proverb:\t");
-		        String sentence = scanner.nextLine();
-		        getJokesFromJserver(name, serverName, uuid);
+		        String name2 = scanner.nextLine();
+		        getJokesFromJserver(name2, serverName, uuid);
 			}
 		} catch (IOException x) {
 			x.printStackTrace();
 		}
-	}
-
-	static String toText(byte ip[]) { /* Make portable for 128 bit format */
-		StringBuffer result = new StringBuffer();
-		for (int i = 0; i < ip.length; ++i) {
-			if (i > 0)
-			result.append(".");
-			result.append(0xff & ip[i]);
-		}
-		return result.toString();
 	}
 
 	// Method take parameters and creates a port for client/server communication
@@ -71,7 +60,6 @@ public class JokeClient {
 			// Execute the stream
 			toServer.flush();
 		
-			
 			// Read two or three lines of response from the server,
 			// and block while synchronously waiting:
 			for (int i = 1; i <= 3; i++) {
